@@ -1,4 +1,13 @@
 
+import java.util.Properties
+
+val nasaProperties = Properties().apply {
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) {
+        localFile.inputStream().use { load(it) }
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -21,6 +30,16 @@ android {
 
         testInstrumentationRunner =
             "androidx.test.runner.AndroidJUnitRunner"
+
+        // API KEY DE NASA
+        val nasaKey =
+            nasaProperties.getProperty("NASA_API_KEY", "")
+
+        buildConfigField(
+            "String",
+            "NASA_API_KEY",
+            "\"$nasaKey\""
+        )
     }
 
     buildTypes {
@@ -38,6 +57,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -72,6 +92,14 @@ dependencies {
     // ===== VIEWMODEL =====
     implementation(
         "androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0"
+    )
+
+    // ===== IMAGENES APOD - COIL =====
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // ===== ICONOS COMPOSE =====
+    implementation(
+        "androidx.compose.material:material-icons-core"
     )
 
     // ===== PRUEBAS =====
