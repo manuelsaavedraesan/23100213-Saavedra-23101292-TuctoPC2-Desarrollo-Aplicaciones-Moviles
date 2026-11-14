@@ -22,5 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DiarioEspacial"
+rootProject.name = "Diario Espacial"
 include(":app")
+ 

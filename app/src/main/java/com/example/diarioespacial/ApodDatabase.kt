@@ -1,5 +1,7 @@
 package com.example.diarioespacial
 
+import com.example.diarioespacial.data.local.AsteroidDao
+import com.example.diarioespacial.data.local.AsteroidEntity
 import android.content.Context
 import androidx.room.Dao
 import androidx.room.Database
@@ -48,13 +50,20 @@ interface ApodDao {
     suspend fun updateFavorite(date: String, isFav: Boolean)
 }
 
+
 @Database(
-    entities = [ApodEntity::class],
-    version = 1,
+    entities = [
+        ApodEntity::class,
+        AsteroidEntity::class
+    ],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
+
     abstract fun apodDao(): ApodDao
+
+    abstract fun asteroidDao(): AsteroidDao
 
     companion object {
         @Volatile
@@ -67,7 +76,9 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "diario_espacial.db"
                 )
-                    .fallbackToDestructiveMigration(dropAllTables = true)
+                    .fallbackToDestructiveMigration(
+                        dropAllTables = true
+                    )
                     .build()
                     .also { INSTANCE = it }
             }
