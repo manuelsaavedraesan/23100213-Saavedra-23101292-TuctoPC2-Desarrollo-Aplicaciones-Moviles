@@ -75,4 +75,6 @@ dependencies {
     implementation("androidx.room:room-ktx:2.8.5")
     kapt("androidx.room:room-compiler:2.8.5")
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+    implementation("androidx.compose.material:material-icons-core")
 }
