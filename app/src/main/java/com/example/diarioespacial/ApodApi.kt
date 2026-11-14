@@ -24,11 +24,24 @@ interface NasaApiService {
         @Query("api_key") apiKey: String = BuildConfig.NASA_API_KEY
     ): List<ApodDto>
 
+    @GET("planetary/apod")
+    suspend fun getApodCount(
+        @Query("count") count: Int = 12,
+        @Query("api_key") apiKey: String = BuildConfig.NASA_API_KEY
+    ): List<ApodDto>
+
     companion object {
-        fun create(): NasaApiService = Retrofit.Builder()
-            .baseUrl("https://api.nasa.gov/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(NasaApiService::class.java)
+        fun create(): NasaApiService {
+            val client = okhttp3.OkHttpClient.Builder()
+                .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+            return Retrofit.Builder()
+                .baseUrl("https://api.nasa.gov/")
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(NasaApiService::class.java)
+        }
     }
 }

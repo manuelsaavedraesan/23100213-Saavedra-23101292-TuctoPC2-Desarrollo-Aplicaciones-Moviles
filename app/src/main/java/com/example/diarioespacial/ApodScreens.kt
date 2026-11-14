@@ -70,10 +70,16 @@ fun ApodListScreen(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
                 state.items.isEmpty() -> {
-                    Text(
-                        text = state.errorMessage ?: "No hay imágenes disponibles para mostrar.",
-                        modifier = Modifier.align(Alignment.Center).padding(16.dp)
-                    )
+                    Column(
+                        modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = state.errorMessage ?: "No hay imágenes disponibles para mostrar.")
+                        Spacer(Modifier.height(8.dp))
+                        androidx.compose.material3.Button(onClick = { viewModel.refresh() }) {
+                            Text("Reintentar")
+                        }
+                    }
                 }
                 else -> {
                     LazyColumn(

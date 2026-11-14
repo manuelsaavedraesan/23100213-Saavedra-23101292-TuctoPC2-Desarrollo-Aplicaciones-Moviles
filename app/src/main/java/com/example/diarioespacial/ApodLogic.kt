@@ -44,14 +44,61 @@ class ApodRepository(
             startDate = sixDaysAgo.format(formatter),
             endDate = today.format(formatter)
         )
-        val favDates = dao.getFavoriteDates().toSet()
-        val entities = response.mapNotNull { dto ->
-            val d = dto.date ?: return@mapNotNull null
-            dto.toEntity(isFavorite = d in favDates)
-        }
-        dao.insertAll(entities)
-    }
 
+        val nasaSpacePhotos = listOf(
+            "https://images-assets.nasa.gov/image/PIA12348/PIA12348~medium.jpg",
+            "https://images-assets.nasa.gov/image/PIA04921/PIA04921~medium.jpg",
+            "https://images-assets.nasa.gov/image/PIA15415/PIA15415~medium.jpg",
+            "https://images-assets.nasa.gov/image/PIA01341/PIA01341~medium.jpg",
+            "https://images-assets.nasa.gov/image/PIA03149/PIA03149~medium.jpg",
+            "https://images-assets.nasa.gov/image/PIA17563/PIA17563~medium.jpg",
+            "https://images-assets.nasa.gov/image/PIA16884/PIA16884~medium.jpg"
+        )
+
+        val usedUrls = mutableSetOf<String>()
+        val favDates = dao.getFavoriteDates().toSet()
+
+        val entities = response.mapIndexedNotNull { index, dto ->
+            val d = dto.date?.takeIf { it.isNotBlank() } ?: return@mapIndexedNotNull null
+            val rawUrl = dto.url?.trim().orEmpty()
+            val rawTitle = dto.title?.trim().orEmpty()
+            val isGenericOrRepeated = rawUrl.isBlank() ||
+                    dto.mediaType != "image" ||
+                    rawTitle.equals("NASA Science", ignoreCase = true) ||
+                    rawUrl.contains("logo", ignoreCase = true) ||
+                    rawUrl in usedUrls
+
+            val finalUrl = if (!isGenericOrRepeated) {
+                rawUrl
+            } else {
+                nasaSpacePhotos[index % nasaSpacePhotos.size]
+            }
+            usedUrls.add(finalUrl)
+
+            val finalTitle = if (rawTitle.isNotBlank() && !rawTitle.equals("NASA Science", ignoreCase = true)) {
+                rawTitle
+            } else {
+                val snippet = dto.explanation
+                    ?.substringBefore(".")
+                    ?.trim()
+                    ?.take(40)
+                    ?.takeIf { it.isNotBlank() }
+                if (snippet != null) "$snippet..." else "Fotografía Espacial ($d)"
+            }
+
+            dto.copy(
+                title = finalTitle,
+                url = finalUrl,
+                mediaType = "image"
+            ).toEntity(isFavorite = d in favDates)
+
+        }
+
+        if (entities.isNotEmpty()) {
+            dao.clearNonFavorites()
+            dao.insertAll(entities)
+        }
+    }
     suspend fun toggleFavorite(date: String, currentState: Boolean) {
         dao.updateFavorite(date, !currentState)
     }
@@ -93,7 +140,7 @@ class ApodViewModel(private val repository: ApodRepository) : ViewModel() {
             try {
                 repository.refreshLast7Days()
             } catch (e: Exception) {
-                _error.value = "No se pudieron cargar los datos de la NASA."
+                _error.value = "Error NASA: ${e.message ?: "revisa tu API Key"}"
             } finally {
                 _isLoading.value = false
             }

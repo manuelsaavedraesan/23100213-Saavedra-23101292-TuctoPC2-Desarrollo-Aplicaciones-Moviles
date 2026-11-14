@@ -32,6 +32,9 @@ interface ApodDao {
     @Query("SELECT * FROM apod_items WHERE isFavorite = 1 ORDER BY date DESC")
     fun observeFavorites(): Flow<List<ApodEntity>>
 
+    @Query("DELETE FROM apod_items WHERE isFavorite = 0")
+    suspend fun clearNonFavorites()
+
     @Query("SELECT * FROM apod_items WHERE date = :date LIMIT 1")
     fun observeByDate(date: String): Flow<ApodEntity?>
 
